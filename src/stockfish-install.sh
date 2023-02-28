@@ -1,6 +1,7 @@
 # Stockfish installation (to execute with sudo)
 # Create for docker
 # playechess.com
+# Any ARM support
 
 apt-get update
 apt-get install -y git make g++ wget
