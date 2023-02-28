@@ -49,7 +49,29 @@ return best move
 """
 @app.get('/best')
 async def best(x_FEN: Union[str, None] = fastapi.Header(default=None), x_config: Union[str, None] = fastapi.Header(default=None), x_depth: Union[str, None] = fastapi.Header(default=None)):
-    return {}
+    if x_depth == None:
+        x_depth = 15
+    if x_config == None:
+        x_config = '{}'
+
+    try:
+        x_config = json.loads(x_config)
+    except:
+        return { "error": 'Invalid config' }
+    try:
+        x_depth = int(x_depth)
+    except:
+        return { "error": 'Invalid depth' }
+
+    littlefish = Stockfish(depth=x_depth, parameters=x_config)
+
+    if x_FEN == None:
+        return { "error": 'Any FEN found' }
+    if not littlefish.is_fen_valid(x_FEN):
+        return { "error": 'Invalid FEN'}
+
+    littlefish.set_fen_position(x_FEN)
+    return { "response": littlefish.get_best_move() }
 
 """
 * x-FEN
@@ -61,18 +83,84 @@ return top moves
 """
 @app.get('/top')
 async def top(x_FEN: Union[str, None] = fastapi.Header(default=None), x_config: Union[str, None] = fastapi.Header(default=None), x_depth: Union[str, None] = fastapi.Header(default=None), x_count: Union[str, None] = fastapi.Header(default=None)):
-    return {}
+    if x_depth == None:
+        x_depth = 15
+    if x_config == None:
+        x_config = '{}'
+    if x_count == None:
+        x_count = 3
+
+    try:
+        x_config = json.loads(x_config)
+    except:
+        return { "error": 'Invalid config' }
+    try:
+        x_depth = int(x_depth)
+    except:
+        return { "error": 'Invalid depth' }
+    try:
+        x_count = int(x_count)
+    except:
+        return { "error": 'Invalid count' }
+
+    littlefish = Stockfish(depth=x_depth, parameters=x_config)
+
+    if x_FEN == None:
+        return { "error": 'Any FEN found' }
+    if not littlefish.is_fen_valid(x_FEN):
+        return { "error": 'Invalid FEN'}
+
+    littlefish.set_fen_position(x_FEN)
+    return { "response": littlefish.get_top_moves(x_count) }
 
 """
 * x-FEN
 * x-ELO | x-LVL
+* x-depth  = 15
   x-config = {}
-  x-depth  = 15
-  x-count  = 3
+
+return AI play
 """
 @app.get('/play')
-async def play(x_FEN: Union[str, None] = fastapi.Header(default=None), x_ELO: Union[str, None] = fastapi.Header(default=None), x_LVL: Union[str, None] = fastapi.Header(default=None), x_config: Union[str, None] = fastapi.Header(default=None), x_depth: Union[str, None] = fastapi.Header(default=None), x_count: Union[str, None] = fastapi.Header(default=None)):
-    return {}
+async def play(x_FEN: Union[str, None] = fastapi.Header(default=None), x_ELO: Union[str, None] = fastapi.Header(default=None), x_LVL: Union[str, None] = fastapi.Header(default=None), x_config: Union[str, None] = fastapi.Header(default=None), x_depth: Union[str, None] = fastapi.Header(default=None)):
+    if x_depth == None:
+        return { "error": 'Invalid depth' }
+    if x_config == None:
+        x_config = '{}'
+
+    try:
+        x_config = json.loads(x_config)
+    except:
+        return { "error": 'Invalid config' }
+    try:
+        x_depth = int(x_depth)
+    except:
+        return { "error": 'Invalid depth' }
+
+    littlefish = Stockfish(depth=x_depth, parameters=x_config)
+
+    if x_ELO == None and x_LVL == None:
+        return { "error": 'Invalid ELO and level' }
+    elif x_ELO != None:
+        try:
+            x_ELO = int(x_ELO)
+            littlefish.set_elo_rating(x_ELO)
+        except:
+            return { "error": 'Invalid ELO' }
+    else:
+        try:
+            x_LVL = int(x_LVL)
+            littlefish.set_skill_level(x_LVL)
+        except:
+            return { "error": 'Invalid level' }
+
+    if x_FEN == None:
+        return { "error": 'Any FEN found' }
+    if not littlefish.is_fen_valid(x_FEN):
+        return { "error": 'Invalid FEN'}
+
+    littlefish.set_fen_position(x_FEN)
+    return { "response": littlefish.get_best_move() }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=30000)
