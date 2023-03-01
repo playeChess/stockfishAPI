@@ -5,7 +5,29 @@ import fastapi
 import uvicorn
 import json
 
+import sys
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 app = fastapi.FastAPI()
+
+entrypoint = os.getenv('ENTRYPOINT')
+if entrypoint == None:
+    entrypoint = ''
+else:
+    if entrypoint[-1] == '/':
+        entrypoint = entrypoint[:-1]
+
+port = os.getenv('PORT')
+if port == None:
+    port = 30000
+else:
+    try:
+        port = int(port)
+    except:
+        print('Invalid port')
+        sys.exit()
 
 """
 * x-FEN
@@ -14,7 +36,7 @@ app = fastapi.FastAPI()
 
 return evaluation point white side
 """
-@app.get('/eval')
+@app.get(f'{entrypoint}/eval')
 async def eval(x_FEN: Union[str, None] = fastapi.Header(default=None), x_config: Union[str, None] = fastapi.Header(default=None), x_depth: Union[str, None] = fastapi.Header(default=None)):
     if x_depth == None:
         x_depth = 15
@@ -47,7 +69,7 @@ async def eval(x_FEN: Union[str, None] = fastapi.Header(default=None), x_config:
 
 return best move
 """
-@app.get('/best')
+@app.get(f'{entrypoint}/best')
 async def best(x_FEN: Union[str, None] = fastapi.Header(default=None), x_config: Union[str, None] = fastapi.Header(default=None), x_depth: Union[str, None] = fastapi.Header(default=None)):
     if x_depth == None:
         x_depth = 15
@@ -81,7 +103,7 @@ async def best(x_FEN: Union[str, None] = fastapi.Header(default=None), x_config:
 
 return top moves
 """
-@app.get('/top')
+@app.get(f'{entrypoint}/top')
 async def top(x_FEN: Union[str, None] = fastapi.Header(default=None), x_config: Union[str, None] = fastapi.Header(default=None), x_depth: Union[str, None] = fastapi.Header(default=None), x_count: Union[str, None] = fastapi.Header(default=None)):
     if x_depth == None:
         x_depth = 15
@@ -121,7 +143,7 @@ async def top(x_FEN: Union[str, None] = fastapi.Header(default=None), x_config: 
 
 return AI play
 """
-@app.get('/play')
+@app.get(f'{entrypoint}/play')
 async def play(x_FEN: Union[str, None] = fastapi.Header(default=None), x_ELO: Union[str, None] = fastapi.Header(default=None), x_LVL: Union[str, None] = fastapi.Header(default=None), x_config: Union[str, None] = fastapi.Header(default=None), x_depth: Union[str, None] = fastapi.Header(default=None)):
     if x_depth == None:
         return { "error": 'Invalid depth' }
@@ -163,4 +185,4 @@ async def play(x_FEN: Union[str, None] = fastapi.Header(default=None), x_ELO: Un
     return { "response": littlefish.get_best_move() }
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=30000)
+    uvicorn.run(app, host="0.0.0.0", port=port)
